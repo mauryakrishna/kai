@@ -8,8 +8,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [AppEvent::class, Truth::class, OffPhoneAction::class],
-    version = 4,
+    entities = [AppEvent::class, Truth::class, OffPhoneAction::class, Escape::class],
+    version = 5,
     exportSchema = false,
 )
 abstract class KaiDatabase : RoomDatabase() {
@@ -20,8 +20,23 @@ abstract class KaiDatabase : RoomDatabase() {
 
     abstract fun actions(): ActionDao
 
+    abstract fun escapes(): EscapeDao
+
     companion object {
         @Volatile private var instance: KaiDatabase? = null
+
+        /** Adds the escape log, so the pause length can be tuned from evidence. */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS escapes (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "at INTEGER NOT NULL, " +
+                        "day TEXT NOT NULL, " +
+                        "package_name TEXT NOT NULL)"
+                )
+            }
+        }
 
         /** Adds the off-phone actions table. */
         private val MIGRATION_3_4 = object : Migration(3, 4) {
@@ -68,7 +83,7 @@ abstract class KaiDatabase : RoomDatabase() {
                     context.applicationContext,
                     KaiDatabase::class.java,
                     "kai.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build().also { instance = it }
             }
     }
 }

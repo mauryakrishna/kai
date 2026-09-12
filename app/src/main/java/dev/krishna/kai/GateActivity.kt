@@ -22,6 +22,7 @@ import android.widget.TextView
 import android.widget.Toast
 import dev.krishna.kai.data.Actions
 import dev.krishna.kai.data.Escalation
+import dev.krishna.kai.data.Escape
 import dev.krishna.kai.data.KaiDatabase
 import dev.krishna.kai.data.KaiSettings
 import dev.krishna.kai.data.OffPhoneAction
@@ -343,8 +344,11 @@ class GateActivity : Activity() {
                     text = "hold"
                     val armed = Runnable {
                         settings.pauseFor(KaiSettings.ESCAPE_MILLIS)
+                        recordEscape()
                         Toast.makeText(
-                            this@GateActivity, "Kai paused for 1 hour", Toast.LENGTH_LONG
+                            this@GateActivity,
+                            "Kai stands down for ${KaiSettings.ESCAPE_MILLIS / 60_000} minutes",
+                            Toast.LENGTH_LONG,
                         ).show()
                         finish()
                     }
@@ -372,6 +376,22 @@ class GateActivity : Activity() {
     override fun onStop() {
         super.onStop()
         Log.i(TAG, "gate stopped (target=$target)")
+    }
+
+    /** Logged, not to shame you, but so the pause length can be set from evidence. */
+    private fun recordEscape() {
+        val pkg = target
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            runCatching {
+                KaiDatabase.get(applicationContext).escapes().insert(
+                    Escape(
+                        at = System.currentTimeMillis(),
+                        day = LocalDate.now().toString(),
+                        packageName = pkg,
+                    )
+                )
+            }
+        }
     }
 
     private fun goHome() {

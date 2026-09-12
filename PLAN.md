@@ -97,6 +97,12 @@ time — which needs different friction from a long scroll.
   The escape hatch is a faint dot held for 5 seconds, not an invisible corner.
   An escape you cannot find when you genuinely need the phone is not an escape.
 
+  It stands Kai down for **2 minutes**, not an hour. An hour was the first
+  guess and it was far too generous: a ten-second errand — sending an OTP,
+  answering one message — should not cost a whole afternoon of protection,
+  and a punitive escape is what trains you to uninstall the app instead.
+  Every use is logged, so the length gets set from evidence rather than guesswork.
+
   **The wait grows with repetition:** 8s base, +7s per repeat that day, capped
   at 90s. The 1st open costs 8 seconds, the 6th costs 43, the 13th onward costs
   90. Opening an app at all is not the problem; reaching for it for the tenth

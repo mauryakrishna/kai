@@ -44,6 +44,7 @@ class MainActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var todayHeadline: TextView
     private lateinit var todayRows: LinearLayout
+    private lateinit var escapeLine: TextView
     private lateinit var baselineHeadline: TextView
     private lateinit var baselineRows: LinearLayout
     private lateinit var usageAccess: Button
@@ -59,6 +60,11 @@ class MainActivity : Activity() {
         status = TextView(this).apply { textSize = 15f; setPadding(0, 0, 0, 40) }
         todayHeadline = heading()
         todayRows = rowHolder()
+        escapeLine = TextView(this).apply {
+            textSize = 14f
+            setTextColor(Color.parseColor("#9E9E9E"))
+            setPadding(0, 0, 0, 24)
+        }
         baselineHeadline = heading()
         baselineRows = rowHolder()
 
@@ -115,6 +121,7 @@ class MainActivity : Activity() {
             addView(status)
             addView(todayHeadline)
             addView(todayRows)
+            addView(escapeLine)
             addView(baselineHeadline)
             addView(baselineRows)
             addView(armSwitch)
@@ -175,11 +182,19 @@ class MainActivity : Activity() {
         val today = LocalDate.now().toString()
         val hasUsage = UsageBaseline.hasPermission(this@MainActivity)
 
+        val db = KaiDatabase.get(this@MainActivity)
         val (summary, baseline) = withContext(Dispatchers.IO) {
-            val dao = KaiDatabase.get(this@MainActivity).appEvents()
-            val s = summarise(dao.forDay(today), System.currentTimeMillis())
+            val s = summarise(db.appEvents().forDay(today), System.currentTimeMillis())
             val b = if (hasUsage) UsageBaseline.read(this@MainActivity) else null
             s to b
+        }
+        val escapes = withContext(Dispatchers.IO) {
+            runCatching { db.escapes().countForDay(today) }.getOrDefault(0)
+        }
+        escapeLine.text = when (escapes) {
+            0 -> "Escape hatch: unused today"
+            1 -> "Escape hatch: once today"
+            else -> "Escape hatch: $escapes times today"
         }
 
         // --- Kai's own log, today ---

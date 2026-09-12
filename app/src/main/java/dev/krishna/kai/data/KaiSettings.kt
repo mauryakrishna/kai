@@ -156,8 +156,17 @@ class KaiSettings(context: Context) {
     companion object {
         /** How long a pass through the gate is good for. */
         const val SESSION_MILLIS = 5 * 60_000L
-        /** How long the escape hatch stands Kai down for. */
-        const val ESCAPE_MILLIS = 60 * 60_000L
+        /**
+         * How long the escape hatch stands Kai down for.
+         *
+         * Two minutes: enough for the thing you genuinely have to do right now
+         * -- send an OTP, answer a message, read a booking reference -- and
+         * useless for settling in to scroll. An hour was the first guess and it
+         * was far too generous; a ten-second errand should not cost the whole
+         * afternoon's protection. Escapes are logged so this can be adjusted
+         * from what actually happens.
+         */
+        const val ESCAPE_MILLIS = 2 * 60_000L
 
         private const val KEY_ARMED = "armed"
         private const val KEY_ALLOWLIST = "allowlist"
