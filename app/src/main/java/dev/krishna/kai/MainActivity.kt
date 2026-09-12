@@ -13,11 +13,13 @@ import android.view.WindowInsets
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.Switch
 import android.widget.TextView
 import dev.krishna.kai.data.AppUsage
 import dev.krishna.kai.data.Baseline
 import dev.krishna.kai.data.DayStat
 import dev.krishna.kai.data.KaiDatabase
+import dev.krishna.kai.data.KaiSettings
 import dev.krishna.kai.data.UsageBaseline
 import dev.krishna.kai.data.formatDuration
 import dev.krishna.kai.data.summarise
@@ -45,6 +47,8 @@ class MainActivity : Activity() {
     private lateinit var baselineHeadline: TextView
     private lateinit var baselineRows: LinearLayout
     private lateinit var usageAccess: Button
+    private lateinit var armSwitch: Switch
+    private val settings by lazy { KaiSettings(this) }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -67,6 +71,21 @@ class MainActivity : Activity() {
             setOnClickListener { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         }
 
+        val allowlist = Button(this).apply {
+            text = "Allowed apps"
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, AllowlistActivity::class.java))
+            }
+        }
+
+        // Off by default, and it stays off until the escape hatch exists.
+        armSwitch = Switch(this).apply {
+            text = "Arm the gate"
+            textSize = 16f
+            setPadding(0, 32, 0, 16)
+            setOnCheckedChangeListener { _, on -> settings.armed = on }
+        }
+
         val column = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(status)
@@ -74,6 +93,8 @@ class MainActivity : Activity() {
             addView(todayRows)
             addView(baselineHeadline)
             addView(baselineRows)
+            addView(armSwitch)
+            addView(allowlist)
             addView(usageAccess)
             addView(accessibility)
         }
@@ -100,6 +121,7 @@ class MainActivity : Activity() {
         status.text = if (on) "Watching. Nothing is blocked." else
             "Not watching yet — turn Kai on under Accessibility → Installed apps."
         status.setTextColor(if (on) GREEN else AMBER)
+        armSwitch.isChecked = settings.armed
         refresh()
     }
 
