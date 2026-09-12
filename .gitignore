@@ -14,3 +14,6 @@ local.properties
 # stray tool logs (not part of the project)
 logs/
 .kotlin/
+
+# personal measurements, never committed (public repo)
+BASELINE.md

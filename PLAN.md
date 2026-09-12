@@ -63,12 +63,27 @@ SHA-256. `dl.google.com` and Maven Central are fast, so normal builds are unaffe
 - [x] **Stage 0 — Setup** — done
   - [x] Toolchain installed and verified
   - [x] Project skeleton builds (2.2MB APK in 31s)
-  - [x] Installed and verified on the phone (motorola edge 50 neo, `ZD222PF33X`)
+  - [x] Installed and verified on the phone
 
-- [ ] **Stage 1 — Measure.** No blocking at all; just find out the real number.
-  - [ ] AccessibilityService detecting foreground app
-  - [ ] Room DB logging every app switch
-  - [ ] One screen showing today's counts
+- [x] **Stage 1 — Measure.** No blocking at all; just find out the real number. — done
+  - [x] 1.1 AccessibilityService detecting foreground app (deduped, systemui filtered)
+  - [x] 1.2 Room DB logging every app switch (`kai.db`, table `app_events`)
+  - [x] 1.3 Screen showing today's opens and per-app time
+
+  - [x] 1.4 Backfill from `UsageStatsManager` — no week of waiting needed
+
+  Duration is derived as the gap to the next event, so nothing half-open survives a crash.
+
+### Baseline
+
+Measured 2026-09-13 from `UsageStatsManager`. The actual figures live in
+`BASELINE.md`, which is gitignored — this repo is public and the baseline is
+a detailed picture of one person's phone habits.
+
+What matters for the design: the heaviest use is a **web browser**, not a
+social app, so gating named social apps would have missed the problem
+entirely. A second app shows a different shape — very frequent opens, little
+time — which needs different friction from a long scroll.
 
 - [ ] **Stage 2 — Gate + escape hatch**
   - [ ] Escape hatch first: long-press corner → disable 1 hour

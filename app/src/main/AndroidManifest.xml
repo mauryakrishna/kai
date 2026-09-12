@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Reads the usage history Android already keeps, so the baseline doesn't
+         need a week of waiting. Granted by hand under Special app access. -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- Needed to turn package names into app names. Scoped to launchable apps
+         rather than QUERY_ALL_PACKAGES, which is more than we need. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
 
     <application
-        android:label="Kai"
+        android:label="@string/app_name"
         android:icon="@android:drawable/ic_lock_idle_lock"
         android:theme="@android:style/Theme.DeviceDefault">
 
@@ -14,5 +30,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Bound by the system only; the BIND permission is what guarantees that. -->
+        <service
+            android:name=".service.KaiAccessibilityService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
     </application>
 </manifest>

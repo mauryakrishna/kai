@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kai</string>
+    <string name="accessibility_description">Kai needs to see which app is in the foreground so it can measure your usage and, later, put a gate in front of it. It reads only the package name of the app on screen. It never reads screen content, text, or passwords.</string>
+</resources>
