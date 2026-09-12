@@ -87,7 +87,8 @@ time — which needs different friction from a long scroll.
 
 - [x] **Stage 2 — Gate + escape hatch** — done
   - [x] 2.1 Allowlist picker (launcher locked on) + arm switch, off by default
-  - [x] 2.2 Full-screen gate, 10s countdown, escape hatch, 5-minute grants
+  - [x] 2.2 Full-screen gate, escape hatch, 5-minute grants
+  - [x] 2.3 Wait escalates with how often the app was opened today
   - [x] Resume control, so a pause can be lifted early
 
   Measured on device: **218ms** from app launch to gate on screen — fast enough
@@ -95,6 +96,12 @@ time — which needs different friction from a long scroll.
 
   The escape hatch is a faint dot held for 5 seconds, not an invisible corner.
   An escape you cannot find when you genuinely need the phone is not an escape.
+
+  **The wait grows with repetition:** 8s base, +7s per repeat that day, capped
+  at 90s. The 1st open costs 8 seconds, the 6th costs 43, the 13th onward costs
+  90. Opening an app at all is not the problem; reaching for it for the tenth
+  time is. The gate also names the count — "6th time today" — because the
+  number itself is the argument.
 
 - [ ] **Stage 3 — Truths**
   - [ ] My own statements, editable

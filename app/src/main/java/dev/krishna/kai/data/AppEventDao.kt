@@ -15,4 +15,8 @@ interface AppEventDao {
 
     @Query("SELECT COUNT(*) FROM app_events")
     suspend fun total(): Int
+
+    /** How many times this app has already been opened today. Drives the wait. */
+    @Query("SELECT COUNT(*) FROM app_events WHERE day = :day AND package_name = :pkg")
+    suspend fun countForApp(day: String, pkg: String): Int
 }

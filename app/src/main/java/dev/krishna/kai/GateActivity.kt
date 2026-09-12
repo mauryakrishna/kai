@@ -16,7 +16,18 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import dev.krishna.kai.data.Escalation
+import dev.krishna.kai.data.KaiDatabase
 import dev.krishna.kai.data.KaiSettings
+import dev.krishna.kai.data.ordinal
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import kotlin.math.ceil
 
 /**
  * The gate. Stands between you and an app that isn't on the allowlist.
@@ -30,7 +41,10 @@ class GateActivity : Activity() {
     private lateinit var target: String
     private lateinit var continueButton: Button
     private lateinit var countdown: TextView
+    private lateinit var prompt: TextView
     private var timer: CountDownTimer? = null
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private val escapeHandler = Handler(Looper.getMainLooper())
     private var escapeArmed: Runnable? = null
@@ -50,7 +64,7 @@ class GateActivity : Activity() {
         }
 
         // Stage 3 replaces this with your own written truths.
-        val prompt = TextView(this).apply {
+        prompt = TextView(this).apply {
             text = "Is this what you want to be doing?"
             textSize = 18f
             setTextColor(Color.parseColor("#BDBDBD"))
@@ -103,13 +117,31 @@ class GateActivity : Activity() {
         }
         setContentView(root)
 
-        startCountdown()
+        startWhenCountKnown()
     }
 
-    private fun startCountdown() {
-        timer = object : CountDownTimer(COUNTDOWN_MILLIS, 100) {
+    /**
+     * The wait depends on how often this app has already been opened today, so
+     * the count has to be read first. The gate is already on screen by then and
+     * Continue starts disabled, so there is no window where it can be rushed.
+     */
+    private fun startWhenCountKnown() = scope.launch {
+        val opens = withContext(Dispatchers.IO) {
+            runCatching {
+                KaiDatabase.get(this@GateActivity).appEvents()
+                    .countForApp(LocalDate.now().toString(), target)
+            }.getOrDefault(1).coerceAtLeast(1)
+        }
+        prompt.text = "${ordinal(opens)} time today"
+        startCountdown(Escalation.waitSeconds(opens))
+    }
+
+    private fun startCountdown(seconds: Int) {
+        countdown.text = seconds.toString()
+        timer = object : CountDownTimer(seconds * 1000L, TICK_MILLIS) {
             override fun onTick(remaining: Long) {
-                countdown.text = "%.1f".format(remaining / 1000.0)
+                // Whole seconds only -- a flickering decimal is something to watch.
+                countdown.text = ceil(remaining / 1000.0).toInt().toString()
             }
             override fun onFinish() {
                 countdown.text = ""
@@ -177,6 +209,7 @@ class GateActivity : Activity() {
     override fun onDestroy() {
         super.onDestroy()
         timer?.cancel()
+        scope.cancel()
         escapeArmed?.let { escapeHandler.removeCallbacks(it) }
     }
 
@@ -186,7 +219,7 @@ class GateActivity : Activity() {
 
     companion object {
         const val EXTRA_PACKAGE = "package"
-        private const val COUNTDOWN_MILLIS = 10_000L
+        private const val TICK_MILLIS = 200L
         private const val ESCAPE_HOLD_MILLIS = 5_000L
         private const val ESCAPE_SIZE = 220
         private val ESCAPE_IDLE = Color.parseColor("#2E3B4A")

@@ -2,6 +2,7 @@ package dev.krishna.kai.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
@@ -10,7 +11,10 @@ import androidx.room.PrimaryKey
  * Duration isn't stored -- it's the gap to the next event, which keeps writes
  * cheap and means a crash can never leave a half-open row.
  */
-@Entity(tableName = "app_events")
+@Entity(
+    tableName = "app_events",
+    indices = [Index(value = ["day", "package_name"])],
+)
 data class AppEvent(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     @ColumnInfo(name = "package_name") val packageName: String,
