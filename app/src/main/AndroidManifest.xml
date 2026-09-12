@@ -31,6 +31,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Its own task, so dismissing it returns to whatever was underneath.
+             noHistory keeps it from lingering in the back stack. -->
+        <activity
+            android:name=".GateActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+
         <activity
             android:name=".AllowlistActivity"
             android:exported="false"

@@ -48,6 +48,21 @@ class KaiSettings(context: Context) {
         pausedUntil = 0L
     }
 
+    /**
+     * After passing the gate an app is open for a short while, then gated again.
+     * Stored per package with an expiry, so a grant cannot outlive a reboot in
+     * any surprising way -- it is just a timestamp comparison.
+     */
+    fun grantAccess(pkg: String, millis: Long = SESSION_MILLIS) {
+        prefs.edit().putLong("grant_$pkg", System.currentTimeMillis() + millis).apply()
+    }
+
+    fun hasGrant(pkg: String): Boolean =
+        System.currentTimeMillis() < prefs.getLong("grant_$pkg", 0L)
+
+    fun grantRemaining(pkg: String): Long =
+        (prefs.getLong("grant_$pkg", 0L) - System.currentTimeMillis()).coerceAtLeast(0L)
+
     /** True when this package should be let straight through. */
     fun isAllowed(pkg: String): Boolean = pkg in allowlist || pkg == app.packageName
 
@@ -83,9 +98,14 @@ class KaiSettings(context: Context) {
         return found
     }
 
-    private companion object {
-        const val KEY_ARMED = "armed"
-        const val KEY_ALLOWLIST = "allowlist"
-        const val KEY_PAUSED_UNTIL = "paused_until"
+    companion object {
+        /** How long a pass through the gate is good for. */
+        const val SESSION_MILLIS = 5 * 60_000L
+        /** How long the escape hatch stands Kai down for. */
+        const val ESCAPE_MILLIS = 60 * 60_000L
+
+        private const val KEY_ARMED = "armed"
+        private const val KEY_ALLOWLIST = "allowlist"
+        private const val KEY_PAUSED_UNTIL = "paused_until"
     }
 }

@@ -1,10 +1,13 @@
 package dev.krishna.kai.service
 
 import android.accessibilityservice.AccessibilityService
+import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import dev.krishna.kai.data.AppEvent
+import dev.krishna.kai.GateActivity
 import dev.krishna.kai.data.KaiDatabase
+import dev.krishna.kai.data.KaiSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -29,6 +32,8 @@ class KaiAccessibilityService : AccessibilityService() {
 
     private val dao by lazy { KaiDatabase.get(this).appEvents() }
 
+    private val settings by lazy { KaiSettings(this) }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.i(TAG, "connected")
@@ -49,6 +54,26 @@ class KaiAccessibilityService : AccessibilityService() {
                 .onFailure { Log.w(TAG, "could not record $pkg", it) }
         }
         Log.i(TAG, "foreground -> $pkg")
+        maybeGate(pkg)
+    }
+
+    /**
+     * Measurement always happens; gating only when every condition holds.
+     * Order matters: the cheap checks short-circuit before anything else.
+     */
+    private fun maybeGate(pkg: String) {
+        if (!settings.armed) return
+        if (settings.isPaused) return
+        if (settings.isAllowed(pkg)) return
+        if (settings.hasGrant(pkg)) return
+
+        Log.i(TAG, "gating $pkg")
+        runCatching {
+            startActivity(Intent(this, GateActivity::class.java).apply {
+                putExtra(GateActivity.EXTRA_PACKAGE, pkg)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            })
+        }.onFailure { Log.w(TAG, "could not show gate for $pkg", it) }
     }
 
     override fun onInterrupt() = Unit

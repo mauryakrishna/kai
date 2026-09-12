@@ -85,11 +85,16 @@ social app, so gating named social apps would have missed the problem
 entirely. A second app shows a different shape — very frequent opens, little
 time — which needs different friction from a long scroll.
 
-- [ ] **Stage 2 — Gate + escape hatch**
-  - [ ] Escape hatch first: long-press corner → disable 1 hour
-  - [ ] Allowlist picker (launcher must always be allowed)
-  - [ ] Full-screen gate with countdown
-  - [ ] 5-minute session grants, then re-gate
+- [x] **Stage 2 — Gate + escape hatch** — done
+  - [x] 2.1 Allowlist picker (launcher locked on) + arm switch, off by default
+  - [x] 2.2 Full-screen gate, 10s countdown, escape hatch, 5-minute grants
+  - [x] Resume control, so a pause can be lifted early
+
+  Measured on device: **218ms** from app launch to gate on screen — fast enough
+  that the app behind it is never visible.
+
+  The escape hatch is a faint dot held for 5 seconds, not an invisible corner.
+  An escape you cannot find when you genuinely need the phone is not an escape.
 
 - [ ] **Stage 3 — Truths**
   - [ ] My own statements, editable

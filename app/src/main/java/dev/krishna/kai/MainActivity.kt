@@ -48,6 +48,7 @@ class MainActivity : Activity() {
     private lateinit var baselineRows: LinearLayout
     private lateinit var usageAccess: Button
     private lateinit var armSwitch: Switch
+    private lateinit var resumeButton: Button
     private val settings by lazy { KaiSettings(this) }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -69,6 +70,15 @@ class MainActivity : Activity() {
         val accessibility = Button(this).apply {
             text = "Accessibility settings"
             setOnClickListener { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+        }
+
+        // Only meaningful while the escape hatch is holding Kai down.
+        resumeButton = Button(this).apply {
+            text = "Resume Kai now"
+            setOnClickListener {
+                settings.resume()
+                onResume()
+            }
         }
 
         val allowlist = Button(this).apply {
@@ -94,6 +104,7 @@ class MainActivity : Activity() {
             addView(baselineHeadline)
             addView(baselineRows)
             addView(armSwitch)
+            addView(resumeButton)
             addView(allowlist)
             addView(usageAccess)
             addView(accessibility)
@@ -122,6 +133,14 @@ class MainActivity : Activity() {
             "Not watching yet — turn Kai on under Accessibility → Installed apps."
         status.setTextColor(if (on) GREEN else AMBER)
         armSwitch.isChecked = settings.armed
+
+        val paused = settings.isPaused
+        resumeButton.visibility = if (paused) View.VISIBLE else View.GONE
+        if (paused) {
+            val mins = (settings.pausedUntil - System.currentTimeMillis()) / 60_000 + 1
+            status.text = "Paused — Kai stands down for about $mins more minutes."
+            status.setTextColor(AMBER)
+        }
         refresh()
     }
 
