@@ -103,10 +103,17 @@ time — which needs different friction from a long scroll.
   time is. The gate also names the count — "6th time today" — because the
   number itself is the argument.
 
-- [ ] **Stage 3 — Truths**
-  - [ ] My own statements, editable
-  - [ ] Gate shows least-recently-seen one
-  - [ ] Type-to-continue past a threshold
+- [x] **Stage 3 — Truths** — done
+  - [x] 3.1 Editor for your own statements, seeded with replaceable starters
+  - [x] 3.2 Gate shows the least-recently-seen one, so none wears out
+  - [x] 3.3 Past 5 opens in a day, the statement must be typed out to continue
+
+  Paste and autofill are refused on that field. Typing it is the mechanism;
+  pasting would satisfy the check while skipping the point entirely.
+
+  Keyboards, launchers and anything without a launcher activity are never
+  gated. An IME comes to the foreground like any app, and gating one makes it
+  impossible to type — including typing the statement the gate is asking for.
 
 - [ ] **Stage 4 — Redirect**
   - [ ] Off-phone action list

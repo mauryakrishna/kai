@@ -81,6 +81,13 @@ class MainActivity : Activity() {
             }
         }
 
+        val truths = Button(this).apply {
+            text = "What you told yourself"
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, TruthsActivity::class.java))
+            }
+        }
+
         val allowlist = Button(this).apply {
             text = "Allowed apps"
             setOnClickListener {
@@ -105,6 +112,7 @@ class MainActivity : Activity() {
             addView(baselineRows)
             addView(armSwitch)
             addView(resumeButton)
+            addView(truths)
             addView(allowlist)
             addView(usageAccess)
             addView(accessibility)

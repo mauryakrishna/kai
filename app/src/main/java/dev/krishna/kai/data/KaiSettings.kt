@@ -5,6 +5,7 @@ import android.content.Intent
 import android.provider.MediaStore
 import android.provider.Settings
 import android.provider.Telephony
+import android.view.inputmethod.InputMethodManager
 
 /**
  * Kai's configuration.
@@ -64,7 +65,39 @@ class KaiSettings(context: Context) {
         (prefs.getLong("grant_$pkg", 0L) - System.currentTimeMillis()).coerceAtLeast(0L)
 
     /** True when this package should be let straight through. */
-    fun isAllowed(pkg: String): Boolean = pkg in allowlist || pkg == app.packageName
+    fun isAllowed(pkg: String): Boolean =
+        pkg in allowlist || pkg == app.packageName || pkg in neverGate
+
+    /**
+     * Packages that must never meet the gate whatever the allowlist says.
+     *
+     * Keyboards are the reason this exists: an IME comes to the foreground like
+     * any other window, so gating one makes it impossible to type -- including
+     * typing out the statement the gate is asking for.
+     */
+    val neverGate: Set<String> by lazy {
+        val found = mutableSetOf(app.packageName)
+        runCatching {
+            app.getSystemService(InputMethodManager::class.java)
+                ?.enabledInputMethodList
+                ?.forEach { found += it.packageName }
+        }
+        runCatching {
+            app.packageManager.queryIntentActivities(
+                Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0
+            ).forEach { found += it.activityInfo.packageName }
+        }
+        found
+    }
+
+    /**
+     * Only things you can actually launch are worth gating. Everything else on
+     * screen -- system UI, input methods, overlays -- is plumbing, and gating
+     * plumbing breaks the phone rather than your habits.
+     */
+    fun isGatable(pkg: String): Boolean =
+        runCatching { app.packageManager.getLaunchIntentForPackage(pkg) != null }
+            .getOrDefault(false)
 
     /**
      * Resolved from the system rather than hardcoded, so it stays correct if

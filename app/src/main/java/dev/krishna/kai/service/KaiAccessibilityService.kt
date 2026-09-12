@@ -66,6 +66,7 @@ class KaiAccessibilityService : AccessibilityService() {
         if (settings.isPaused) return
         if (settings.isAllowed(pkg)) return
         if (settings.hasGrant(pkg)) return
+        if (!settings.isGatable(pkg)) return
 
         Log.i(TAG, "gating $pkg")
         runCatching {

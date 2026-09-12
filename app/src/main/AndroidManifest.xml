@@ -32,7 +32,8 @@
         </activity>
 
         <!-- Its own task, so dismissing it returns to whatever was underneath.
-             noHistory keeps it from lingering in the back stack. -->
+             noHistory matters with singleTask: it stops a stale gate lingering
+             and later being reused for a different app. -->
         <activity
             android:name=".GateActivity"
             android:exported="false"
@@ -41,6 +42,11 @@
             android:noHistory="true"
             android:taskAffinity=""
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
+
+        <activity
+            android:name=".TruthsActivity"
+            android:exported="false"
+            android:label="What you told yourself" />
 
         <activity
             android:name=".AllowlistActivity"
