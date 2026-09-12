@@ -1,0 +1,16 @@
+# Gradle / Android
+.gradle/
+build/
+local.properties
+*.apk
+
+# IDE
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# stray tool logs (not part of the project)
+logs/
+.kotlin/
