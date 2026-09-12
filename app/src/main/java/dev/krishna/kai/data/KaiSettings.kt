@@ -64,6 +64,28 @@ class KaiSettings(context: Context) {
     fun grantRemaining(pkg: String): Long =
         (prefs.getLong("grant_$pkg", 0L) - System.currentTimeMillis()).coerceAtLeast(0L)
 
+    /**
+     * While this is in the future you are off doing something else, and gated
+     * apps stay shut -- grants included. Distinct from [pausedUntil], which is
+     * the escape hatch standing Kai down entirely.
+     */
+    var lockedUntil: Long
+        get() = prefs.getLong(KEY_LOCKED_UNTIL, 0L)
+        set(value) = prefs.edit().putLong(KEY_LOCKED_UNTIL, value).apply()
+
+    val isLocked: Boolean get() = System.currentTimeMillis() < lockedUntil
+
+    val lockRemainingMinutes: Int
+        get() = ((lockedUntil - System.currentTimeMillis()) / 60_000L + 1).toInt().coerceAtLeast(0)
+
+    fun lockFor(minutes: Int) {
+        lockedUntil = System.currentTimeMillis() + minutes * 60_000L
+    }
+
+    fun unlock() {
+        lockedUntil = 0L
+    }
+
     /** True when this package should be let straight through. */
     fun isAllowed(pkg: String): Boolean =
         pkg in allowlist || pkg == app.packageName || pkg in neverGate
@@ -140,5 +162,6 @@ class KaiSettings(context: Context) {
         private const val KEY_ARMED = "armed"
         private const val KEY_ALLOWLIST = "allowlist"
         private const val KEY_PAUSED_UNTIL = "paused_until"
+        private const val KEY_LOCKED_UNTIL = "locked_until"
     }
 }

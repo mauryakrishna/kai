@@ -115,9 +115,17 @@ time — which needs different friction from a long scroll.
   gated. An IME comes to the foreground like any app, and gating one makes it
   impossible to type — including typing the statement the gate is asking for.
 
-- [ ] **Stage 4 — Redirect**
-  - [ ] Off-phone action list
-  - [ ] "Doing it" → lock timer
+- [x] **Stage 4 — Redirect** — done
+  - [x] 4.1 Editor for off-phone actions, each with the minutes it shuts the phone
+  - [x] 4.2 "Not now" offers one instead of dumping you at the home screen
+  - [x] 4.3 Committing locks the gated apps for that action's minutes
+
+  Turning an app down used to lead to the home screen, which is where the
+  scrolling restarts. Now it leads somewhere.
+
+  A lock outranks a grant: having said you were doing something else, a
+  five-minute pass bought earlier does not let you back in. The escape hatch
+  still clears it — this is friction, not a cage.
 
 - [ ] **Stage 5 — Ledger**
   - [ ] 9pm daily reckoning notification

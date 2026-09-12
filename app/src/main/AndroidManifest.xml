@@ -49,6 +49,11 @@
             android:label="What you told yourself" />
 
         <activity
+            android:name=".ActionsActivity"
+            android:exported="false"
+            android:label="Things to do instead" />
+
+        <activity
             android:name=".AllowlistActivity"
             android:exported="false"
             android:label="Allowed apps" />

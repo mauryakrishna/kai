@@ -88,6 +88,13 @@ class MainActivity : Activity() {
             }
         }
 
+        val actions = Button(this).apply {
+            text = "Things to do instead"
+            setOnClickListener {
+                startActivity(Intent(this@MainActivity, ActionsActivity::class.java))
+            }
+        }
+
         val allowlist = Button(this).apply {
             text = "Allowed apps"
             setOnClickListener {
@@ -113,6 +120,7 @@ class MainActivity : Activity() {
             addView(armSwitch)
             addView(resumeButton)
             addView(truths)
+            addView(actions)
             addView(allowlist)
             addView(usageAccess)
             addView(accessibility)
@@ -141,6 +149,12 @@ class MainActivity : Activity() {
             "Not watching yet — turn Kai on under Accessibility → Installed apps."
         status.setTextColor(if (on) GREEN else AMBER)
         armSwitch.isChecked = settings.armed
+
+        if (settings.isLocked) {
+            status.text = "Locked — you said you were doing something else. " +
+                "${settings.lockRemainingMinutes} min left."
+            status.setTextColor(AMBER)
+        }
 
         val paused = settings.isPaused
         resumeButton.visibility = if (paused) View.VISIBLE else View.GONE

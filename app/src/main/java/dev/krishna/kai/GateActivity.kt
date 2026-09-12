@@ -20,9 +20,11 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import dev.krishna.kai.data.Actions
 import dev.krishna.kai.data.Escalation
 import dev.krishna.kai.data.KaiDatabase
 import dev.krishna.kai.data.KaiSettings
+import dev.krishna.kai.data.OffPhoneAction
 import dev.krishna.kai.data.Truths
 import dev.krishna.kai.data.ordinal
 import kotlinx.coroutines.CoroutineScope
@@ -54,6 +56,12 @@ class GateActivity : Activity() {
 
     private var timer: CountDownTimer? = null
     private var requiredText: String? = null
+    private lateinit var gateColumn: LinearLayout
+    private lateinit var redirectColumn: LinearLayout
+    private lateinit var redirectText: TextView
+    private lateinit var doingIt: Button
+    private var offered: OffPhoneAction? = null
+    private lateinit var notNow: Button
 
     private val escapeHandler = Handler(Looper.getMainLooper())
     private var escapeArmed: Runnable? = null
@@ -124,12 +132,12 @@ class GateActivity : Activity() {
             }
         }
 
-        val notNow = Button(this).apply {
+        notNow = Button(this).apply {
             text = "Not now"
-            setOnClickListener { goHome() }
+            setOnClickListener { offerRedirect() }
         }
 
-        val column = LinearLayout(this).apply {
+        gateColumn = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             addView(heading)
@@ -140,6 +148,44 @@ class GateActivity : Activity() {
             addView(typeField)
             addView(continueButton)
             addView(notNow)
+        }
+
+        redirectText = TextView(this).apply {
+            textSize = 26f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            setLineSpacing(0f, 1.25f)
+            setPadding(0, 24, 0, 48)
+        }
+
+        doingIt = Button(this).apply {
+            text = "I'm doing it"
+            setOnClickListener { commitToAction() }
+        }
+
+        redirectColumn = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            visibility = View.GONE
+            addView(TextView(this@GateActivity).apply {
+                text = "Instead"
+                textSize = 16f
+                setTextColor(Color.parseColor("#8A99AB"))
+                gravity = Gravity.CENTER
+            })
+            addView(redirectText)
+            addView(doingIt)
+            addView(Button(this@GateActivity).apply {
+                text = "Just go home"
+                setOnClickListener { goHome() }
+            })
+        }
+
+        val column = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            addView(gateColumn)
+            addView(redirectColumn)
         }
 
         val root = LinearLayout(this).apply {
@@ -165,6 +211,8 @@ class GateActivity : Activity() {
      * rushed in the gap.
      */
     private fun begin() = scope.launch {
+        if (settings.isLocked) { showLocked(); return@launch }
+
         val db = KaiDatabase.get(this@GateActivity)
 
         val opens = withContext(Dispatchers.IO) {
@@ -221,6 +269,60 @@ class GateActivity : Activity() {
 
     /** Forgiving about spacing and case, strict about the words. */
     private fun normalise(s: String) = s.trim().replace(WHITESPACE, " ").lowercase()
+
+    /**
+     * Swap the gate for something to do instead. Turning an app down should
+     * lead somewhere, not just back to the home screen the scrolling starts from.
+     */
+    private fun offerRedirect() = scope.launch {
+        timer?.cancel()
+        val action = withContext(Dispatchers.IO) {
+            runCatching {
+                Actions.seedIfEmpty(this@GateActivity)
+                KaiDatabase.get(this@GateActivity).actions().leastRecentlyDone()
+            }.getOrNull()
+        }
+        if (action == null) { goHome(); return@launch }
+
+        offered = action
+        redirectText.text = action.text
+        doingIt.text = "I'm doing it — ${action.minutes} min"
+        gateColumn.visibility = View.GONE
+        redirectColumn.visibility = View.VISIBLE
+    }
+
+    /** Committing shuts the gated apps for the action's length. */
+    private fun commitToAction() {
+        val action = offered ?: return goHome()
+        settings.lockFor(action.minutes)
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    KaiDatabase.get(this@GateActivity).actions()
+                        .markDone(action.id, System.currentTimeMillis())
+                }
+            }
+            Toast.makeText(
+                this@GateActivity, "Phone shut for ${action.minutes} minutes", Toast.LENGTH_LONG
+            ).show()
+            goHome()
+        }
+    }
+
+    /** Already off doing something: no way through until the time is up. */
+    private fun showLocked() {
+        truthView.text = offeredLockMessage()
+        countLine.text = ""
+        countdown.text = ""
+        continueButton.visibility = View.GONE
+        // Being offered something else to do, while already doing something
+        // else, is nonsense. Straight home.
+        notNow.setOnClickListener { goHome() }
+    }
+
+    private fun offeredLockMessage(): String =
+        "You said you were doing something else.\n\n" +
+            "${settings.lockRemainingMinutes} min left."
 
     /**
      * The way out that isn't uninstalling. Hold the dot for five seconds and

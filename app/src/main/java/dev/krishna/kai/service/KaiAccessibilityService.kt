@@ -65,8 +65,9 @@ class KaiAccessibilityService : AccessibilityService() {
         if (!settings.armed) return
         if (settings.isPaused) return
         if (settings.isAllowed(pkg)) return
-        if (settings.hasGrant(pkg)) return
         if (!settings.isGatable(pkg)) return
+        // A lock outranks a grant: you said you were doing something else.
+        if (!settings.isLocked && settings.hasGrant(pkg)) return
 
         Log.i(TAG, "gating $pkg")
         runCatching {

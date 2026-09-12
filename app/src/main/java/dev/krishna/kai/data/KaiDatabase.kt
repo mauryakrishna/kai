@@ -7,15 +7,35 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [AppEvent::class, Truth::class], version = 3, exportSchema = false)
+@Database(
+    entities = [AppEvent::class, Truth::class, OffPhoneAction::class],
+    version = 4,
+    exportSchema = false,
+)
 abstract class KaiDatabase : RoomDatabase() {
 
     abstract fun appEvents(): AppEventDao
 
     abstract fun truths(): TruthDao
 
+    abstract fun actions(): ActionDao
+
     companion object {
         @Volatile private var instance: KaiDatabase? = null
+
+        /** Adds the off-phone actions table. */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS actions (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "text TEXT NOT NULL, " +
+                        "minutes INTEGER NOT NULL, " +
+                        "last_done_at INTEGER NOT NULL DEFAULT 0, " +
+                        "done_count INTEGER NOT NULL DEFAULT 0)"
+                )
+            }
+        }
 
         /** Adds the truths table. Again a real migration: losing the statements
          *  you wrote would be worse than losing the measurements. */
@@ -48,7 +68,7 @@ abstract class KaiDatabase : RoomDatabase() {
                     context.applicationContext,
                     KaiDatabase::class.java,
                     "kai.db",
-                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build().also { instance = it }
             }
     }
 }
